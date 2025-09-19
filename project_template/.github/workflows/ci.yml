@@ -7,6 +7,10 @@ on:
     branches:
       - main
 
+concurrency:  # Cancel existing tests on the same PR if a new commit is added
+  group: {% raw %}${{ github.workflow }}-${{ github.ref || github.run_id }}{% endraw %}
+  cancel-in-progress: {% raw %}${{ startsWith(github.ref, 'refs/pull/') }}{% endraw %}
+
 jobs:
   pre-commit:
     name: Format + lint code
@@ -24,6 +28,7 @@ jobs:
 
   checks:
     name: {% raw %}Run tests for Python ${{ matrix.python-version }} on ${{ matrix.runs-on }}{% endraw %}
+    if: github.event.pull_request.draft == false
     runs-on: {% raw %}${{ matrix.runs-on }}{% endraw %}
     needs: [pre-commit]
     strategy:
